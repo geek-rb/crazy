@@ -1,0 +1,21 @@
+FROM node:lts as build-stage
+LABEL stage=builder
+WORKDIR /app
+#RUN apt update && apt -y install git && apt -y upgrade && npm install -g npm@latest && npm install -g @vue/cli
+ADD dev-src/ /app/
+ADD dev-cfg/front_j/.env.production.local /app/
+RUN npm install --prefer-offline --no-audit
+RUN npm run build-production
+
+FROM nginx as production-stage
+LABEL maintainer="ExadelDevOps"
+LABEL app="crazy-front"
+EXPOSE 44357
+RUN mkdir /app \
+&& mkdir /etc/nginx/ssl \
+&& chmod 600 /etc/nginx/ssl
+ADD dev-cfg/front_j/ssl/ /etc/nginx/ssl/
+ADD dev-cfg/front_j/nginx.conf /etc/nginx/nginx.conf
+COPY --from=build-stage /app/dist /app
+
+# docker build . -t 666pehid666/crazy-front:latest

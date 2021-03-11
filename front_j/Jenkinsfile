@@ -1,0 +1,68 @@
+pipeline {
+    agent { label '!master' }
+
+    environment {
+        GIT_SRC='https://github.com/itserashkou-exadel/exadel_discounts_fe.git'
+        GIT_CFG='git@github.com:geek-rb/crazy.git'
+        REGISTRY='666pehid666/crazy-front'
+        REGISTRY_CR='docker_hub_geek'
+        front=''
+    }
+
+    stages {
+        stage ('CleanWorkspace') {
+            steps {
+                cleanWs()
+            }
+        }
+
+        stage ('Checkout source') {
+            steps {
+                dir('dev-src') {
+                  git branch: "${params.CH_BRANCH}", changelog: false, poll: false, url: "${GIT_SRC}"
+                }
+            }
+        }
+
+        stage ('Checkout config') {
+            steps {
+                dir('dev-cfg') {
+                  git branch: 'main', changelog: false, credentialsId: '1b49d388-d792-478d-8399-e356641964b1', poll: false, url: "${GIT_CFG}"
+                }
+            }
+        }
+
+        stage ('Build') {
+          steps {
+            script {
+              front = docker.build("${REGISTRY}:${currentBuild.number}", '-f dev-cfg/front_j/Dockerfile.build .')
+            }
+          }
+        }
+
+        stage ('push') {
+            steps {
+                echo 'magic for docker push'
+                script {
+                    docker.withRegistry( '', REGISTRY_CR) {
+                        front.push("${currentBuild.number}")
+                        front.push('latest')
+                        }
+                }
+            }
+        }
+
+        stage ('Clean Docker') {
+            steps {
+                echo 'Clean containers and unused images'
+                sh 'docker system prune --volumes --force'
+                sh "docker rmi ${REGISTRY}:${currentBuild.number}"
+                
+                echo 'info: containers'
+                sh 'docker ps -a'
+                echo 'info: images'
+                sh 'docker images'
+            }
+        }
+    }
+}
