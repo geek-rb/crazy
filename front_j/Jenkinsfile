@@ -5,7 +5,7 @@ pipeline {
         GIT_SRC='https://github.com/itserashkou-exadel/exadel_discounts_fe.git'
         GIT_CFG='git@github.com:geek-rb/crazy.git'
         REGISTRY='666pehid666/crazy-front'
-        REGISTRY_CR='docker_hub_geek'
+        REGISTRY_CR='dockerhub-geek'
         front=''
     }
 
@@ -27,7 +27,7 @@ pipeline {
         stage ('Checkout config') {
             steps {
                 dir('dev-cfg') {
-                  git branch: 'main', changelog: false, credentialsId: '1b49d388-d792-478d-8399-e356641964b1', poll: false, url: "${GIT_CFG}"
+                  git branch: 'main', changelog: false, credentialsId: 'geek-git', poll: false, url: "${GIT_CFG}"
                 }
             }
         }
