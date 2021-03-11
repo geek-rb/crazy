@@ -1,0 +1,27 @@
+FROM mcr.microsoft.com/dotnet/aspnet:5.0-buster-slim AS base
+WORKDIR /app
+EXPOSE 8001
+
+FROM mcr.microsoft.com/dotnet/sdk:5.0-buster-slim AS publish
+WORKDIR /src
+COPY ./dev-src/src/Exadel.CrazyPrice .
+RUN dotnet restore "Exadel.CrazyPrice.IdentityServer/Exadel.CrazyPrice.IdentityServer.csproj"
+WORKDIR "/src/Exadel.CrazyPrice.IdentityServer"
+RUN dotnet publish "Exadel.CrazyPrice.IdentityServer.csproj" -c Release -o /app
+
+FROM base AS final
+LABEL maintainer="ExadelDevOps"
+LABEL app="crazyprice-be-identity"
+ENV ASPNETCORE_URLS=https://+;http://+ \
+ASPNETCORE_HTTPS_PORT=8001 \
+ASPNETCORE_Kestrel__Certificates__Default__Password=password \
+ASPNETCORE_Kestrel__Certificates__Default__Path=/https/crazy.pipisin.xyz.pfx \
+ASPNETCORE_ENVIRONMENT=Docker
+WORKDIR /app
+COPY --from=publish /app .
+COPY ./dev-cfg/back_j/crazy.pipisin.xyz.pfx /https/
+COPY ./dev-cfg/back_j/identity/appsettings.Docker.json ./
+ENTRYPOINT ["dotnet", "Exadel.CrazyPrice.IdentityServer.dll"]
+
+# docker build . -t 666pehid666/crazy-identity:latest
+# ./volumes/logs/identityServer:/app/Logs/

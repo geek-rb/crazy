@@ -1,0 +1,15 @@
+FROM rabbitmq:3-management
+LABEL maintainer="ExadelDevOps"
+LABEL app="crazyprice-be-cprabbit"
+EXPOSE 5672 15672
+COPY ./dev-src/volumes/configuration/rabbitmq/ /etc/rabbitmq/
+#COPY ./dev-src/volumes/rabbitmq/data /var/lib/rabbitmq/mnesia/rabbit@cprabbit
+# NO data in git volumes/rabbitmq/data!!!
+
+# docker build . -t 666pehid666/crazy-cprabbit:latest
+#   - 5672:5672
+#   - 15672:15672
+#   - ./volumes/logs/rabbitmq:/var/log/rabbitmq/log
+# name cprabbit
+#   links:
+#   - cprabbit

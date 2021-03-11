@@ -1,0 +1,120 @@
+pipeline {
+    agent { label '!master' }
+
+    environment {
+        GIT_SRC='https://github.com/yegorl/exadel_discounts_be'
+        GIT_CFG='git@github.com:geek-rb/crazy.git'
+        REGISTRY_API='666pehid666/crazy-api'
+        REGISTRY_IDENTITY='666pehid666/crazy-identity'
+        REGISTRY_MAILSENDER='666pehid666/crazy-mailsender'
+        REGISTRY_RABBITMQ='666pehid666/crazy-rabbitmq'
+        REGISTRY_CR='dockerhub-geek'
+        api=''
+        identity=''
+        rabbitmq=''
+        mailsender=''
+
+    }
+
+    stages {
+        stage ('CleanWorkspace') {
+            steps {
+                cleanWs()
+            }
+        }
+
+        stage ('Checkout source') {
+            steps {
+                dir('dev-src') {
+                  git branch: 'master', changelog: false, poll: false, url: "${GIT_SRC}"
+                }
+            }
+        }
+
+        stage ('Checkout config') {
+            steps {
+                dir('dev-cfg') {
+                  git branch: 'main', changelog: false, credentialsId: 'geek-git', poll: false, url: "${GIT_CFG}"
+                }
+            }
+        }
+
+        stage ('Build API') {
+          steps {
+            script {
+              api = docker.build("${REGISTRY_API}:${currentBuild.number}", '-f dev-cfg/back_j/Dockerfile.api .')
+            }
+          }
+        }
+
+        stage ('Build Identity') {
+          steps {
+            script {
+              identity = docker.build("${REGISTRY_IDENTITY}:${currentBuild.number}", '-f dev-cfg/back_j/Dockerfile.identity .')
+            }
+          }
+        }
+
+        stage ('Build Mailsender') {
+          steps {
+            script {
+              mailsender = docker.build("${REGISTRY_MAILSENDER}:${currentBuild.number}", '-f dev-cfg/back_j/Dockerfile.mailsender .')
+            }
+          }
+        }
+
+        stage ('Build RabbitMQ') {
+          steps {
+            script {
+              rabbitmq = docker.build("${REGISTRY_RABBITMQ}:${currentBuild.number}", '-f dev-cfg/back_j/Dockerfile.rabbitmq .')
+            }
+          }
+        }
+
+
+        stage ('push') {
+            steps {
+                echo 'magic for docker push'
+                script {
+                    docker.withRegistry( '', REGISTRY_CR) {
+                        api.push("${currentBuild.number}")
+                        api.push('latest')
+
+                        identity.push("${currentBuild.number}")
+                        identity.push('latest')
+
+                        mailsender.push("${currentBuild.number}")
+                        mailsender.push('latest')
+
+                        rabbitmq.push("${currentBuild.number}")
+                        rabbitmq.push('latest')                        
+                        }
+                }
+            }
+        }
+
+        stage ('Clean Docker') {
+            steps {
+                echo 'Clean containers and unused images'
+                sh 'docker system prune --volumes --force'
+
+                sh "docker rmi ${REGISTRY_API}:${currentBuild.number}"
+                sh "docker rmi ${REGISTRY_API}:latest"
+
+                sh "docker rmi ${REGISTRY_IDENTITY}:${currentBuild.number}"
+                sh "docker rmi ${REGISTRY_IDENTITY}:latest"
+
+                sh "docker rmi ${REGISTRY_MAILSENDER}:${currentBuild.number}"
+                sh "docker rmi ${REGISTRY_MAILSENDER}:latest"
+
+                sh "docker rmi ${REGISTRY_RABBITMQ}:${currentBuild.number}"
+                sh "docker rmi ${REGISTRY_RABBITMQ}:latest"
+                
+                echo 'info: containers'
+                sh 'docker ps -a'
+                echo 'info: images'
+                sh 'docker images'
+            }
+        }
+    }
+}

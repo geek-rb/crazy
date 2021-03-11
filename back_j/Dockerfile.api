@@ -1,0 +1,27 @@
+FROM mcr.microsoft.com/dotnet/aspnet:5.0-buster-slim AS base
+WORKDIR /app
+EXPOSE 9001
+
+FROM mcr.microsoft.com/dotnet/sdk:5.0-buster-slim AS publish
+WORKDIR /src
+COPY ./dev-src/src/Exadel.CrazyPrice .
+RUN dotnet restore "Exadel.CrazyPrice.WebApi/Exadel.CrazyPrice.WebApi.csproj"
+WORKDIR "/src/Exadel.CrazyPrice.WebApi"
+RUN dotnet publish "Exadel.CrazyPrice.WebApi.csproj" -c Release -o /app
+
+FROM base AS final
+LABEL maintainer="ExadelDevOps"
+LABEL app="crazyprice-be-api"
+ENV ASPNETCORE_URLS=https://+;http://+ \
+ASPNETCORE_HTTPS_PORT=9001 \
+ASPNETCORE_Kestrel__Certificates__Default__Password=password \
+ASPNETCORE_Kestrel__Certificates__Default__Path=/https/crazy.pipisin.xyz.pfx \
+ASPNETCORE_ENVIRONMENT=Docker
+WORKDIR /app
+COPY --from=publish /app .
+COPY ./dev-cfg/back_j/crazy.pipisin.xyz.pfx /https/
+COPY ./dev-cfg/back_j/api/appsettings.Docker.json ./
+ENTRYPOINT ["dotnet", "Exadel.CrazyPrice.WebApi.dll"]
+
+# docker build . -t 666pehid666/crazy-api:latest
+#   - ./volumes/logs/api:/app/Logs/

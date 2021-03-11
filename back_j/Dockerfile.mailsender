@@ -1,0 +1,27 @@
+FROM mcr.microsoft.com/dotnet/aspnet:5.0-buster-slim AS base
+WORKDIR /app
+EXPOSE 7000
+
+FROM mcr.microsoft.com/dotnet/sdk:5.0-buster-slim AS publish
+WORKDIR /src
+COPY ./dev-src/src/Exadel.CrazyPrice .
+RUN dotnet restore "Exadel.CrazyPrice.Services/Mail/MailSenderMailKit/MailSenderMailKit.csproj"
+WORKDIR "/src/Exadel.CrazyPrice.Services/Mail/MailSenderMailKit"
+RUN dotnet publish "MailSenderMailKit.csproj" -c Release -o /app
+
+FROM base AS final
+LABEL maintainer="ExadelDevOps"
+LABEL app="crazyprice-be-mailsender"
+ENV ASPNETCORE_URLS=http://+ \
+ASPNETCORE_ENVIRONMENT=Docker
+WORKDIR /app
+COPY --from=publish /app .
+COPY ./dev-src/volumes/configuration/mailsender/appsettings.Docker.json ./
+ENTRYPOINT ["dotnet", "MailSenderMailKit.dll"]
+
+# docker build . -t 666pehid666/crazy-mailsender:latest
+#    - 7000:80
+#   image: mailsender 
+#  links:
+#   - cprabbit
+#    - ./volumes/logs/mailsender:/app/Logs/
