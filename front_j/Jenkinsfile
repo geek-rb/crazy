@@ -19,7 +19,7 @@ pipeline {
         stage ('Checkout source') {
             steps {
                 dir('dev-src') {
-                  git branch: 'master', changelog: false, poll: false, url: "${GIT_SRC}"
+                  git branch: 'develop', changelog: false, poll: false, url: "${GIT_SRC}"
                 }
             }
         }

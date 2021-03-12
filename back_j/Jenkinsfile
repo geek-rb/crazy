@@ -54,7 +54,7 @@ pipeline {
             }
           }
         }
-
+/*
         stage ('Build Mailsender') {
           steps {
             script {
@@ -70,8 +70,7 @@ pipeline {
             }
           }
         }
-
-
+*/
         stage ('push') {
             steps {
                 echo 'magic for docker push'
@@ -83,11 +82,11 @@ pipeline {
                         identity.push("${currentBuild.number}")
                         identity.push('latest')
 
-                        mailsender.push("${currentBuild.number}")
-                        mailsender.push('latest')
+//                        mailsender.push("${currentBuild.number}")
+//                        mailsender.push('latest')
 
-                        rabbitmq.push("${currentBuild.number}")
-                        rabbitmq.push('latest')                        
+//                        rabbitmq.push("${currentBuild.number}")
+//                        rabbitmq.push('latest')                        
                         }
                 }
             }
@@ -104,11 +103,11 @@ pipeline {
                 sh "docker rmi ${REGISTRY_IDENTITY}:${currentBuild.number}"
                 sh "docker rmi ${REGISTRY_IDENTITY}:latest"
 
-                sh "docker rmi ${REGISTRY_MAILSENDER}:${currentBuild.number}"
-                sh "docker rmi ${REGISTRY_MAILSENDER}:latest"
+//                sh "docker rmi ${REGISTRY_MAILSENDER}:${currentBuild.number}"
+//                sh "docker rmi ${REGISTRY_MAILSENDER}:latest"
 
-                sh "docker rmi ${REGISTRY_RABBITMQ}:${currentBuild.number}"
-                sh "docker rmi ${REGISTRY_RABBITMQ}:latest"
+//                sh "docker rmi ${REGISTRY_RABBITMQ}:${currentBuild.number}"
+//                sh "docker rmi ${REGISTRY_RABBITMQ}:latest"
                 
                 echo 'info: containers'
                 sh 'docker ps -a'
