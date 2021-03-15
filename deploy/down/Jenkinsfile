@@ -1,0 +1,60 @@
+pipeline {
+    agent { label '!master' }
+
+    environment {
+        GIT_CFG='git@github.com:geek-rb/crazy.git'
+    }
+
+    stages {
+        stage ('CleanWorkspace') {
+            steps {
+                cleanWs()
+            }
+        }
+
+        stage ('Checkout config') {
+            steps {
+                dir('dev-cfg') {
+                  git branch: 'main', changelog: false, credentialsId: 'geek-git', poll: false, url: "${GIT_CFG}"
+                }
+            }
+        }
+
+
+
+        stage ('Down app instance') {
+            steps {
+            dir('dev-cfg/deploy/back'){
+              sh 'docker-compose down'
+            }
+
+            dir('dev-cfg/deploy/front'){
+              sh 'docker-compose down'
+            }
+          }
+        }
+
+/*        stage ('Clean Docker') {
+            steps {
+              echo '############ BEFORE ############'
+              echo 'info: containers'
+              sh 'docker ps -a'
+                
+              echo 'info: images'
+              sh 'docker images'
+
+              echo 'Clean containers and unused images'
+              sh 'docker system prune --all --volumes --force'
+
+              echo '############ AFTER ############'
+
+              echo 'info: containers'
+              sh 'docker ps -a'
+                
+              echo 'info: images'
+              sh 'docker images'
+            }
+        }
+*/
+    }
+}
