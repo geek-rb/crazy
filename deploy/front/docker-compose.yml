@@ -1,0 +1,8 @@
+version: '3'
+
+services:
+
+ front:
+  image: 666pehid666/crazy-front:latest
+  ports:
+   - 443:44357

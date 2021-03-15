@@ -1,0 +1,61 @@
+pipeline {
+    agent { label '!master' }
+
+    environment {
+        GIT_CFG='git@github.com:geek-rb/crazy.git'
+        REGISTRY_API='666pehid666/crazy-api:latest'
+        REGISTRY_IDENTITY='666pehid666/crazy-identity:latest'
+        REGISTRY_MAILSENDER='666pehid666/crazy-mailsender:latest'
+        REGISTRY_RABBITMQ='666pehid666/crazy-rabbitmq:latest'
+    }
+
+    stages {
+        stage ('CleanWorkspace') {
+            steps {
+                cleanWs()
+            }
+        }
+
+        stage ('Checkout config') {
+            steps {
+                dir('dev-cfg') {
+                  git branch: 'main', changelog: false, credentialsId: 'geek-git', poll: false, url: "${GIT_CFG}"
+                }
+            }
+        }
+
+        stage ('Down back') {
+          steps {
+            dir('dev-cfg/deploy/back'){
+              sh 'docker-compose down'
+            }
+          }
+        }
+
+        stage ('Remove old images') {
+          steps {
+            sh "docker rmi ${REGISTRY_API}"
+            sh "docker rmi ${REGISTRY_IDENTITY}"
+            sh "docker rmi ${REGISTRY_MAILSENDER}"
+            sh "docker rmi ${REGISTRY_RABBITMQ}"
+          }
+        }
+
+        stage ('Up new back') {
+            steps {
+            dir('dev-cfg/deploy/back'){
+              sh 'docker-compose up -d'
+            }
+          }
+        }
+
+        stage ('Status Docker') {
+            steps {
+                echo 'info: containers'
+                sh 'docker ps -a'
+                echo 'info: images'
+                sh 'docker images'
+            }
+        }
+    }
+}

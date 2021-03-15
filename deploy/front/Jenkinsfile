@@ -1,0 +1,55 @@
+pipeline {
+    agent { label '!master' }
+
+    environment {
+        GIT_CFG='git@github.com:geek-rb/crazy.git'
+        IMAGE='666pehid666/crazy-front:latest'
+    }
+
+    stages {
+        stage ('CleanWorkspace') {
+            steps {
+                cleanWs()
+            }
+        }
+
+        stage ('Checkout config') {
+            steps {
+                dir('dev-cfg') {
+                  git branch: 'main', changelog: false, credentialsId: 'geek-git', poll: false, url: "${GIT_CFG}"
+                }
+            }
+        }
+
+        stage ('Down front') {
+          steps {
+            dir('dev-cfg/deploy/front'){
+              sh 'docker-compose down'
+            }
+          }
+        }
+
+        stage ('Remove old images') {
+          steps {
+            sh "docker rmi ${IMAGE}"
+          }
+        }
+
+        stage ('Up new front') {
+            steps {
+            dir('dev-cfg/deploy/front'){
+              sh 'docker-compose up -d'
+            }
+          }
+        }
+
+        stage ('Status Docker') {
+            steps {
+                echo 'info: containers'
+                sh 'docker ps -a'
+                echo 'info: images'
+                sh 'docker images'
+            }
+        }
+    }
+}

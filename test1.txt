@@ -18,3 +18,4 @@ webhook6
 18
 19
 20
+GitHub webhooks activated for job test_webhook-3 with [GitHubRepositoryName[host=github.com,username=geek-rb,repository=crazy]] (events: [PUSH])
